@@ -1,10 +1,12 @@
 package com.stormpath.tutorial.controller;
 
+import com.google.common.base.Stopwatch;
 import com.stormpath.sdk.account.Account;
 import com.stormpath.sdk.servlet.account.AccountResolver;
 import com.stormpath.tutorial.model.CommandRequest;
 import com.stormpath.tutorial.model.CommandResponse;
 import com.stormpath.tutorial.support.ZMachinery;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,8 +27,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 public class GameController {
@@ -37,28 +37,36 @@ public class GameController {
     @Value("#{ @environment['zmachine.save.file.path'] ?: '/tmp' }")
     String saveFilePath;
 
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(GameController.class);
+
     @RequestMapping(value = "/c", method = RequestMethod.POST)
-    public CommandResponse command(@RequestBody(required = false) CommandRequest commandRequest, HttpServletRequest req) {
+    public CommandResponse command(@RequestBody(required = false) CommandRequest commandRequest, HttpServletRequest req) throws IOException {
         Account account = AccountResolver.INSTANCE.getAccount(req);
         String id = account.getHref().substring(account.getHref().lastIndexOf("/")+1);
         String fileName =  saveFilePath + File.separator + id + ".sav";
 
         StringBuffer zMachineCommands = new StringBuffer();
 
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
         // retrieve existing game (if any) from customData
         String zMachineSaveData = (String) account.getCustomData().get("zMachineSaveData");
+
+        stopwatch.stop();
+        log.info("time to load zMachine save data from customData: " + stopwatch);
+
+        stopwatch = Stopwatch.createStarted();
 
         if (zMachineSaveData != null) {
             // save data to file to be restored in game before sending new command
             byte[] rawData = Base64.getDecoder().decode(zMachineSaveData);
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(fileName);
-                fos.write(rawData);
-                fos.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            FileOutputStream fos = new FileOutputStream(fileName);
+            fos.write(rawData);
+            fos.close();
+
+            stopwatch.stop();
+            log.info("time to write zMachine save data to file: " + stopwatch);
+            stopwatch = Stopwatch.createStarted();
 
             // setup restore command if we had custom data
             zMachineCommands.append("restore\nlook\n");
@@ -85,6 +93,9 @@ public class GameController {
         // kill zmachine
         zMachinery.quit();
 
+        stopwatch.stop();
+        log.info("time to fire up and execute zMachine commands: " + stopwatch);
+
         // process output
         // get rid of "OK"s and prompts
         tmpString = tmpString.replace("Ok.\n\n>", "").replace(">", "");
@@ -106,16 +117,18 @@ public class GameController {
         res.setResponse(response);
         res.setStatus("SUCCESS");
 
+        stopwatch = Stopwatch.createStarted();
+
         // store save file in custom data
         Path p = FileSystems.getDefault().getPath("", fileName);
-        try {
-            byte [] fileData = Files.readAllBytes(p);
-            String saveFile = Base64.getEncoder().encodeToString(fileData);
-            account.getCustomData().put("zMachineSaveData", saveFile);
-            account.getCustomData().save();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        byte [] fileData = Files.readAllBytes(p);
+        String saveFile = Base64.getEncoder().encodeToString(fileData);
+        account.getCustomData().put("zMachineSaveData", saveFile);
+        account.getCustomData().save();
+
+        stopwatch.stop();
+        log.info("time to save zMachine save data to customData: " + stopwatch);
 
         // return response
         return res;
@@ -123,35 +136,21 @@ public class GameController {
 
     private void pollStream(ByteArrayOutputStream stream, int waitMillis, int numWait) {
         int i = 0;
-        while (stream.size() <= 0 && i < numWait) {
+        while (stream.size() <= 0 && i++ < numWait) {
             try {
                 Thread.sleep(waitMillis);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("Interrupted during polling.", e);
             }
-            i++;
         }
     }
 
-    @RequestMapping("/l")
-    public Object look(HttpServletRequest req) {
-
-        return null;
+    @ExceptionHandler(IOException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public CommandResponse internalError(IOException ex) {
+        CommandResponse res = new CommandResponse();
+        res.setStatus("ERROR");
+        res.setMessage(ex.getMessage());
+        return res;
     }
-
-    @ExceptionHandler(UnauthorizedException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Map<String, Object> unauthorized(UnauthorizedException ex) {
-        Map<String, Object> ret = new HashMap<>();
-        ret.put("status", "error");
-        ret.put("message", ex.getMessage());
-        return ret;
-    }
-
-    class UnauthorizedException extends RuntimeException {
-        public UnauthorizedException(String message) {
-            super(message);
-        }
-    }
-
 }
