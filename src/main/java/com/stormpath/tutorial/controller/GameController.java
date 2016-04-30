@@ -139,9 +139,7 @@ public class GameController {
 
         CommandResponse res = gameService.processZMachineResponse(zMachineRequest, zMachineResponse);
 
-        if (zMachineRequest != null) {
-            gameService.saveGameState(account);
-        }
+        gameService.saveGameState(account);
 
         // return response
         return res;
