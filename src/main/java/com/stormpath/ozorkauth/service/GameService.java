@@ -1,16 +1,13 @@
-package com.stormpath.tutorial.service;
+package com.stormpath.ozorkauth.service;
 
 import com.google.common.base.Stopwatch;
 import com.stormpath.sdk.account.Account;
-import com.stormpath.tutorial.model.CommandResponse;
-import com.stormpath.tutorial.support.ZMachinery;
+import com.stormpath.ozorkauth.model.CommandResponse;
+import com.stormpath.ozorkauth.support.ZMachinery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

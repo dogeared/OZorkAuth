@@ -1,7 +1,7 @@
-package com.stormpath.tutorial.support;
+package com.stormpath.ozorkauth.support;
 
-import ZMachine.ZCPU;
-import ZMachine.ZUserInterface;
+import com.zaxsoft.zmachine.ZCPU;
+import com.zaxsoft.zmachine.ZUserInterface;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -79,6 +79,11 @@ public class ZMachinery implements ZUserInterface {
     }
 
     @Override
+    public boolean hasTimedInput() {
+        return false;
+    }
+
+    @Override
     public Dimension getScreenCharacters() {
         return null;
     }
@@ -109,7 +114,7 @@ public class ZMachinery implements ZUserInterface {
     }
 
     @Override
-    public Point getCurCursor() {
+    public Point getCursorPosition() {
         return null;
     }
 
@@ -129,7 +134,7 @@ public class ZMachinery implements ZUserInterface {
     }
 
     @Override
-    public void setCursor(int x, int y) {
+    public void setCursorPosition(int x, int y) {
 
     }
 

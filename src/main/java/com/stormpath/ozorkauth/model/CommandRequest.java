@@ -1,4 +1,4 @@
-package com.stormpath.tutorial.model;
+package com.stormpath.ozorkauth.model;
 
 public class CommandRequest {
 

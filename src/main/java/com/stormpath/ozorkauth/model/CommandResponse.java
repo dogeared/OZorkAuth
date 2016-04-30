@@ -1,4 +1,4 @@
-package com.stormpath.tutorial.model;
+package com.stormpath.ozorkauth.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;

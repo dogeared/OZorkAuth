@@ -1,14 +1,14 @@
-package com.stormpath.tutorial.controller;
+package com.stormpath.ozorkauth.controller;
 
 import com.google.common.base.Strings;
 import com.stormpath.sdk.account.Account;
 import com.stormpath.sdk.application.Application;
 import com.stormpath.sdk.client.Client;
 import com.stormpath.sdk.servlet.account.AccountResolver;
-import com.stormpath.tutorial.model.CommandRequest;
-import com.stormpath.tutorial.model.CommandResponse;
-import com.stormpath.tutorial.model.Registration;
-import com.stormpath.tutorial.service.GameService;
+import com.stormpath.ozorkauth.model.CommandRequest;
+import com.stormpath.ozorkauth.model.CommandResponse;
+import com.stormpath.ozorkauth.model.Registration;
+import com.stormpath.ozorkauth.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
