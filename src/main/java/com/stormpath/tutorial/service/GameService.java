@@ -113,7 +113,7 @@ public class GameService {
         String[] gameInfo = tmpResponse[0].split("\n");
         String[] look = (rLength < 3) ? tmpResponse[1].split("\n") : tmpResponse[2].split("\n");
 
-        String[] response = (rLength >= 4) ? tmpResponse[3].split("\n") : new String[0];
+        String[] response = (rLength >= 4) ? tmpResponse[3].split("\n") : null;
 
         // get response from zmachine
         CommandResponse res = new CommandResponse();

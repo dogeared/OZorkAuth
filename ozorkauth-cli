@@ -1,0 +1,70 @@
+#! /bin/bash
+
+## Make sure http exists
+command -v http >/dev/null 2>&1 || { echo >&2 "This script requires that httpie be installed. On Mac, you can install it with: brew install httpie"; exit 1;  }
+
+BASE_URL=https://ozorkauth.herokuapp.com
+COMMAND=
+EMAIL=
+PASSWORD=
+FIRST_NAME=
+LAST_NAME=
+REQUEST=
+TOKEN=
+
+while getopts ":b:c:f:l:e:p:r:t:" opt; do
+  case $opt in
+    b)
+      BASE_URL=$OPTARG
+      ;;
+    c)
+      COMMAND=$OPTARG 
+      ;;
+    f)
+      FIRST_NAME=$OPTARG
+      ;;
+    l)
+      LAST_NAME=$OPTARG
+      ;;
+    e)
+      EMAIL=$OPTARG
+      ;;
+    p)
+      PASSWORD=$OPTARG
+      ;;
+    r)
+      REQUEST=$OPTARG
+      ;;
+    t)
+      TOKEN=$OPTARG
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [ $COMMAND = "auth" ]; then
+  OAUTH_RESPONSE=`http -f POST $BASE_URL/v1/a Origin:$BASE_URL grant_type=password username=$EMAIL password=$PASSWORD`
+  REGEX='"access_token":"(.*)","refresh_token"'
+  if [[ $OAUTH_RESPONSE =~ $REGEX ]]; then
+      TOKEN=${BASH_REMATCH[1]}
+      echo $TOKEN
+  fi
+elif [ $COMMAND = "game" ]; then
+  if [ -n "$REQUEST" ]; then
+    http POST $BASE_URL/v1/c Authorization:"Bearer $TOKEN" request="$REQUEST"
+  else
+    http POST $BASE_URL/v1/c Authorization:"Bearer $TOKEN"
+  fi
+elif [ $COMMAND = "register" ]; then
+  http POST $BASE_URL/v1/r givenName=$FIRST_NAME surName=$LAST_NAME email=$EMAIL password=$PASSWORD
+else
+  echo "-c must be one of auth, game, or register"
+  exit 1
+fi
