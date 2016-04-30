@@ -2,7 +2,6 @@ package com.stormpath.tutorial.controller;
 
 import com.google.common.base.Strings;
 import com.stormpath.sdk.account.Account;
-import com.stormpath.sdk.account.Accounts;
 import com.stormpath.sdk.application.Application;
 import com.stormpath.sdk.client.Client;
 import com.stormpath.sdk.servlet.account.AccountResolver;
@@ -21,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @RestController
@@ -40,6 +40,48 @@ public class GameController {
 
     @Autowired
     Application application;
+
+    @RequestMapping("/")
+    public void root(HttpServletResponse res) throws IOException {
+        res.sendRedirect("/v1/instructions");
+    }
+
+    @RequestMapping("/v1/instructions")
+    public CommandResponse home(HttpServletRequest req) {
+        String proto = (req.getHeader("x-forwarded-proto") != null) ?
+            req.getHeader("x-forwarded-proto") : req.getScheme() ;
+        String server = req.getServerName();
+        String port = (req.getServerPort() == 80 || req.getServerPort() == 443) ? "" : ":" + req.getServerPort();
+        String baseUrl = proto + "://" + server + port;
+
+        CommandResponse res = new CommandResponse();
+
+        String[] response = {
+            "Welcome to the interactive OAuth2 Text Based Adventure!",
+            "",
+            "In order to play the game, you must:",
+            "    1. Register an account",
+            "    2. Get an access token using your account",
+            "    3. Use the access token to send commands to the game",
+            "",
+            "To Register, you send a POST request to the registration endpoint (the below example uses httpie):",
+            "    http POST " + baseUrl + "/v1/r givenName=Bob surName=Smith email=bob@smith.com password=123456aA",
+            "",
+            "To get an access token, you send a POST request to the oauth endpoint (the below example uses httpie):",
+            "    http -f POST " + baseUrl + "/v1/a Origin:" + baseUrl + " grant_type=password username=bob@smith.com password=123456aA",
+            "Note: The above command returns an access token and a refresh token. When the access token expires, you can use the refresh token to get a new access token.",
+            "",
+            "To use the access token to interact with the game, you send a POST request to the command endpoint (the below example uses httpie):",
+            "    http POST " + baseUrl + "/v1/c Authorization:'Bearer <access token>'",
+            "    http POST " + baseUrl + "/v1/c Authorization:'Bearer <access token>' request='go north'",
+            "Note: if you don't send the request parameter, the response will contain the result of looking around your current location in the game"
+        };
+
+        res.setResponse(response);
+        res.setStatus("SUCCESS");
+
+        return res;
+    }
 
     @RequestMapping(value = "/v1/r", method = RequestMethod.POST)
     public CommandResponse register(@RequestBody Registration registration) {
