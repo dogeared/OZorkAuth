@@ -78,6 +78,7 @@ public class GameService {
 
         stopwatch.stop();
         log.info("time to save zMachine save data to customData: " + stopwatch);
+        log.info("Wrote to file: " + getSaveFile(account));
     }
 
     public String doZMachine(StringBuffer zMachineCommands, Account account) {
