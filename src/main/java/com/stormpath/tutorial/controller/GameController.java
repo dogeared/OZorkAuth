@@ -47,88 +47,27 @@ public class GameController {
 
         StringBuffer zMachineCommands = new StringBuffer();
 
-        Stopwatch stopwatch = Stopwatch.createStarted();
+        // restore games state from customData, if it exists
+        loadGameState(account, zMachineCommands, fileName);
 
-        // retrieve existing game (if any) from customData
-        String zMachineSaveData = (String) account.getCustomData().get("zMachineSaveData");
-
-        stopwatch.stop();
-        log.info("time to load zMachine save data from customData: " + stopwatch);
-
-        stopwatch = Stopwatch.createStarted();
-
-        if (zMachineSaveData != null) {
-            // save data to file to be restored in game before sending new command
-            byte[] rawData = Base64.getDecoder().decode(zMachineSaveData);
-            FileOutputStream fos = new FileOutputStream(fileName);
-            fos.write(rawData);
-            fos.close();
-
-            stopwatch.stop();
-            log.info("time to write zMachine save data to file: " + stopwatch);
-            stopwatch = Stopwatch.createStarted();
-
-            // setup restore command if we had custom data
-            zMachineCommands.append("restore\nlook\n");
-        }
+        // we always want to look
+        zMachineCommands.append("look\n");
 
         // setup passed in command
-        if (commandRequest != null && commandRequest.getRequest() != null) {
-            zMachineCommands.append(commandRequest.getRequest());
-            zMachineCommands.append("\n");
+        String zMachineRequest = (commandRequest != null) ? commandRequest.getRequest() : null;
+        if (zMachineRequest != null) {
+            zMachineCommands.append(zMachineRequest + "\n");
+            zMachineCommands.append("save\n");
         }
 
-        // setup save command
-        zMachineCommands.append("save\n");
+        // execute game move (which may just be looking)
+        String zMachineResponse = doZMachine(zMachineCommands, fileName);
 
-        // setup zmachine
-        InputStream in = new ByteArrayInputStream(zMachineCommands.toString().getBytes());
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ZMachinery zMachinery = new ZMachinery(zFile, in, out, fileName);
+        CommandResponse res = processZMachineResponse(zMachineRequest, zMachineResponse);
 
-        // get anything from zMachine in buffer
-        pollStream(out, 10, 10);
-        String tmpString = out.toString();
-
-        // kill zmachine
-        zMachinery.quit();
-
-        stopwatch.stop();
-        log.info("time to fire up and execute zMachine commands: " + stopwatch);
-
-        // process output
-        // get rid of "OK"s and prompts
-        tmpString = tmpString.replace("Ok.\n\n>", "").replace(">", "");
-
-        String[] tmpResponse = tmpString.split("\n\n");
-
-        int rLength = tmpResponse.length;
-
-        String[] gameInfo = tmpResponse[0].split("\n");
-        String[] look = (rLength < 3) ? tmpResponse[1].split("\n") : tmpResponse[2].split("\n");
-
-        String[] response = (rLength >= 4) ? tmpResponse[3].split("\n") : new String[0];
-
-        // get response from zmachine
-        CommandResponse res = new CommandResponse();
-        res.setGameInfo(gameInfo);
-        res.setLook(look);
-        res.setRequest((commandRequest != null) ? commandRequest.getRequest() : null);
-        res.setResponse(response);
-        res.setStatus("SUCCESS");
-
-        stopwatch = Stopwatch.createStarted();
-
-        // store save file in custom data
-        Path p = FileSystems.getDefault().getPath("", fileName);
-
-        byte [] fileData = Files.readAllBytes(p);
-        String saveFile = Base64.getEncoder().encodeToString(fileData);
-        account.getCustomData().put("zMachineSaveData", saveFile);
-        account.getCustomData().save();
-
-        stopwatch.stop();
-        log.info("time to save zMachine save data to customData: " + stopwatch);
+        if (zMachineRequest != null) {
+            saveGameState(account, fileName);
+        }
 
         // return response
         return res;
@@ -143,6 +82,93 @@ public class GameController {
                 log.error("Interrupted during polling.", e);
             }
         }
+    }
+
+    private void loadGameState(Account account, StringBuffer zMachineCommands, String fileName) throws IOException {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        // retrieve existing game (if any) from customData
+        String zMachineSaveData = (String) account.getCustomData().get("zMachineSaveData");
+
+        stopwatch.stop();
+        log.info("time to load zMachine save data from customData: " + stopwatch);
+
+        if (zMachineSaveData != null) {
+            stopwatch = Stopwatch.createStarted();
+
+            // save data to file to be restored in game before sending new command
+            byte[] rawData = Base64.getDecoder().decode(zMachineSaveData);
+            FileOutputStream fos = new FileOutputStream(fileName);
+            fos.write(rawData);
+            fos.close();
+
+            stopwatch.stop();
+            log.info("time to write zMachine save data to file: " + stopwatch);
+
+            // setup restore command if we had custom data
+            zMachineCommands.append("restore\n");
+        }
+    }
+
+    private String doZMachine(StringBuffer zMachineCommands, String fileName) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        // setup zmachine
+        InputStream in = new ByteArrayInputStream(zMachineCommands.toString().getBytes());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ZMachinery zMachinery = new ZMachinery(zFile, in, out, fileName);
+
+        // get anything from zMachine in buffer
+        pollStream(out, 10, 10);
+        String res = out.toString();
+
+        // kill zmachine
+        zMachinery.quit();
+
+        stopwatch.stop();
+        log.info("time to fire up and execute zMachine commands: " + stopwatch);
+
+        return res;
+    }
+
+    private CommandResponse processZMachineResponse(String zMachineRequest, String zMachineResponse) {
+        // process output
+        // get rid of "OK"s and prompts
+        zMachineResponse = zMachineResponse.replace("Ok.\n\n>", "").replace(">", "");
+
+        String[] tmpResponse = zMachineResponse.split("\n\n");
+
+        int rLength = tmpResponse.length;
+
+        String[] gameInfo = tmpResponse[0].split("\n");
+        String[] look = (rLength < 3) ? tmpResponse[1].split("\n") : tmpResponse[2].split("\n");
+
+        String[] response = (rLength >= 4) ? tmpResponse[3].split("\n") : new String[0];
+
+        // get response from zmachine
+        CommandResponse res = new CommandResponse();
+        res.setGameInfo(gameInfo);
+        res.setLook(look);
+        res.setRequest(zMachineRequest);
+        res.setResponse(response);
+        res.setStatus("SUCCESS");
+
+        return res;
+    }
+
+    private void saveGameState(Account account, String fileName) throws IOException {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        // store save file in custom data
+        Path p = FileSystems.getDefault().getPath("", fileName);
+
+        byte [] fileData = Files.readAllBytes(p);
+        String saveFile = Base64.getEncoder().encodeToString(fileData);
+        account.getCustomData().put("zMachineSaveData", saveFile);
+        account.getCustomData().save();
+
+        stopwatch.stop();
+        log.info("time to save zMachine save data to customData: " + stopwatch);
     }
 
     @ExceptionHandler(IOException.class)
