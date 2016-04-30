@@ -126,7 +126,6 @@ public class GameService {
         return res;
     }
 
-
     private void pollStream(ByteArrayOutputStream stream, int waitMillis, int numWait) {
         int i = 0;
         while (stream.size() <= 0 && i++ < numWait) {
