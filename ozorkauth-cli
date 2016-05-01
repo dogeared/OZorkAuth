@@ -49,22 +49,40 @@ while getopts ":b:c:f:l:e:p:r:t:" opt; do
   esac
 done
 
-if [ $COMMAND = "auth" ]; then
+if [ "$COMMAND" = "auth" ]; then
   OAUTH_RESPONSE=`http -f POST $BASE_URL/v1/a Origin:$BASE_URL grant_type=password username=$EMAIL password=$PASSWORD`
   REGEX='"access_token":"(.*)","refresh_token"'
   if [[ $OAUTH_RESPONSE =~ $REGEX ]]; then
       TOKEN=${BASH_REMATCH[1]}
       echo $TOKEN
+  else 
+    echo "Something's done horribly wrong. Please check to make sure that you've supplied and email and password. You can also try hitting the endpoint directly: "
+    echo "\thttp -f POST $BASE_URL/v1/a Origin:$BASE_URL grant_type=password username=<your email address> password=<your password>"
   fi
-elif [ $COMMAND = "game" ]; then
+elif [ "$COMMAND" = "game" ]; then
   if [ -n "$REQUEST" ]; then
     http POST $BASE_URL/v1/c Authorization:"Bearer $TOKEN" request="$REQUEST"
   else
     http POST $BASE_URL/v1/c Authorization:"Bearer $TOKEN"
   fi
-elif [ $COMMAND = "register" ]; then
+elif [ "$COMMAND" = "register" ]; then
   http POST $BASE_URL/v1/r givenName=$FIRST_NAME surName=$LAST_NAME email=$EMAIL password=$PASSWORD
+elif [ "$COMMAND" = "instructions" ]; then
+  http $BASE_URL/v1/instructions
 else
-  echo "-c must be one of auth, game, or register"
-  exit 1
+  echo "Usage: "
+  echo
+  echo "Instructions (similar to this but delivered from the API):"
+  echo "    $0 -c instructions"
+  echo
+  echo "Register:"
+  echo "    $0 -c register -f <first name> -l <last name> -e <email address> -p <password>"
+  echo
+  echo "Authenticate using OAuth2 and get an access token:"
+  echo "    $0 -c auth -e <email address> -p <password>"
+  echo
+  echo "Play the game:"
+  echo "    $0 -c game -t <access token> -r \"<command>\""
+  echo "    NOTE: if you leave off the -r, the response will be the result of looking around your current surroundings."
+  echo "    NOTE: The game is restored from where you last left off and is automatically saved after each command."
 fi
