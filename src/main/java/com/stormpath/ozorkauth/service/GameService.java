@@ -93,6 +93,13 @@ public class GameService {
         pollStream(out, 10, 10);
         String res = out.toString();
 
+        // hack: pause to ensure save file is written
+        try {
+            Thread.sleep(20);
+        } catch (InterruptedException e) {
+            log.error("Got Interrupted: {}", e.getMessage(), e);
+        }
+
         // kill zmachine
         zMachinery.quit();
 
