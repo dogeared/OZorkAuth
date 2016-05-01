@@ -36,6 +36,12 @@ public class GameService {
         return saveFilePath + File.separator + id + ".sav";
     }
 
+    public void restart(Account account) {
+        // retrieve existing game (if any) from customData
+        account.getCustomData().remove("zMachineSaveData");
+        account.getCustomData().save();
+    }
+
     public void loadGameState(StringBuffer zMachineCommands, Account account) throws IOException {
         Stopwatch stopwatch = Stopwatch.createStarted();
 
@@ -50,10 +56,8 @@ public class GameService {
 
             // save data to file to be restored in game before sending new command
             byte[] rawData = Base64.getDecoder().decode(zMachineSaveData);
-            FileOutputStream fos = new FileOutputStream(getSaveFile(account));
-            fos.write(rawData);
-            fos.flush();
-            fos.close();
+            Path p = FileSystems.getDefault().getPath("", getSaveFile(account));
+            Files.write(p, rawData);
 
             stopwatch.stop();
             log.info("time to write zMachine save data to file: " + stopwatch);
@@ -132,6 +136,12 @@ public class GameService {
         res.setStatus("SUCCESS");
 
         return res;
+    }
+
+    public void cleanup(Account account) throws IOException {
+        String fileName = getSaveFile(account);
+        Path p = FileSystems.getDefault().getPath("", getSaveFile(account));
+        Files.deleteIfExists(p);
     }
 
     private void pollStream(ByteArrayOutputStream stream, int waitMillis, int numWait) {

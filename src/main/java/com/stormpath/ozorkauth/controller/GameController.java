@@ -119,16 +119,22 @@ public class GameController {
     public CommandResponse command(@RequestBody(required = false) CommandRequest commandRequest, HttpServletRequest req) throws IOException {
         Account account = AccountResolver.INSTANCE.getAccount(req);
 
+        String zMachineRequest = (commandRequest != null) ? commandRequest.getRequest() : null;
         StringBuffer zMachineCommands = new StringBuffer();
 
-        // restore games state from customData, if it exists
-        gameService.loadGameState(zMachineCommands, account);
+        //check for restart
+        if ("restart".equals(zMachineRequest)) {
+            gameService.restart(account);
+            zMachineRequest = null;
+        } else {
+            // restore games state from customData, if it exists
+            gameService.loadGameState(zMachineCommands, account);
+        }
 
         // we always want to look
         zMachineCommands.append("look\n");
 
         // setup passed in command
-        String zMachineRequest = (commandRequest != null) ? commandRequest.getRequest() : null;
         if (zMachineRequest != null) {
             zMachineCommands.append(zMachineRequest + "\n");
             zMachineCommands.append("save\n");
@@ -142,6 +148,8 @@ public class GameController {
         if (zMachineRequest != null) {
             gameService.saveGameState(account);
         }
+
+        gameService.cleanup(account);
 
         // return response
         return res;
