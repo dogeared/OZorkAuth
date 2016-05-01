@@ -84,20 +84,20 @@ public class GameService {
 
         log.info("executing: " + zMachineCommands.toString().replace("\n", ", ") + " for: " + account.getEmail());
 
+        String fileName = getSaveFile(account);
+
         // setup zmachine
         InputStream in = new ByteArrayInputStream(zMachineCommands.toString().getBytes());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ZMachinery zMachinery = new ZMachinery(zFile, in, out, getSaveFile(account));
+        ZMachinery zMachinery = new ZMachinery(zFile, in, out, fileName);
 
         // get anything from zMachine in buffer
         pollStream(out, 10, 10);
         String res = out.toString();
 
-        // hack: pause to ensure save file is written
-        try {
-            Thread.sleep(20);
-        } catch (InterruptedException e) {
-            log.error("Got Interrupted: {}", e.getMessage(), e);
+        if (zMachineCommands.indexOf("save\n") >= 0) {
+            // ensure save file is written before killing zmachine
+            pollFile(new File(fileName), 10, 10);
         }
 
         // kill zmachine
@@ -140,7 +140,19 @@ public class GameService {
             try {
                 Thread.sleep(waitMillis);
             } catch (InterruptedException e) {
-                log.error("Interrupted during polling.", e);
+                log.error("Interrupted during polling stream: {}", e.getMessage(), e);
+            }
+        }
+    }
+
+    private void pollFile(File f, int waitMillis, int numWait) {
+        // hack: ensure save file is written, avoid infinite
+        int i = 0;
+        while (i++ < numWait && (!f.exists() || f.length() == 0)) {
+            try {
+                Thread.sleep(waitMillis);
+            } catch (InterruptedException e) {
+                log.error("Interrupted during polling file: {}", e.getMessage(), e);
             }
         }
     }
