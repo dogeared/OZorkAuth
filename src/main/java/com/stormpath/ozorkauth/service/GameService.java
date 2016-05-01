@@ -52,6 +52,7 @@ public class GameService {
             byte[] rawData = Base64.getDecoder().decode(zMachineSaveData);
             FileOutputStream fos = new FileOutputStream(getSaveFile(account));
             fos.write(rawData);
+            fos.flush();
             fos.close();
 
             stopwatch.stop();
@@ -80,6 +81,8 @@ public class GameService {
 
     public String doZMachine(StringBuffer zMachineCommands, Account account) {
         Stopwatch stopwatch = Stopwatch.createStarted();
+
+        log.info("executing: " + zMachineCommands.toString().replace("\n", ", ") + " for: " + account.getEmail());
 
         // setup zmachine
         InputStream in = new ByteArrayInputStream(zMachineCommands.toString().getBytes());

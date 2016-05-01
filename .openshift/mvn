@@ -1,0 +1,5 @@
+#!/bin/sh
+prog=$(basename $0)
+export JAVACMD=$JAVA_HOME/bin/java
+export M2_HOME=/usr/share/java/apache-maven-3.0.4
+exec $M2_HOME/bin/$prog "$@"

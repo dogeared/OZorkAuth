@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+  <localRepository>${OPENSHIFT_DEPENDENCIES_DIR}</localRepository>
+</settings>
