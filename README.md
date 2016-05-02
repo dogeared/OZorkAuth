@@ -77,7 +77,7 @@ You get a response that looks like this:
 }
 ```
 
-### Get an Access Aoken and a Refresh Token
+### Get an Access Token and a Refresh Token
 
 The OZorkAuth API exposes an endpoint for authorization: `/v1/a`. Behind the scenes, Stormpath verifies that the
 username and password are valid and, if so, returns an access token and a refresh token.
