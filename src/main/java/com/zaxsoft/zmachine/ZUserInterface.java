@@ -159,4 +159,6 @@ public interface ZUserInterface {
 	// restart.  The UI should prepare by reseting itself to
 	// an initial state.  The function should return.
 	public void restart();
+
+    public Monitor getMonitor();
 }

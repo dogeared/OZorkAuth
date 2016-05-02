@@ -4,6 +4,7 @@ import com.google.common.base.Stopwatch;
 import com.stormpath.sdk.account.Account;
 import com.stormpath.ozorkauth.model.CommandResponse;
 import com.stormpath.ozorkauth.support.ZMachinery;
+import com.zaxsoft.zmachine.Monitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -93,7 +94,8 @@ public class GameService {
         // setup zmachine
         InputStream in = new ByteArrayInputStream(zMachineCommands.toString().getBytes());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ZMachinery zMachinery = new ZMachinery(zFile, in, out, fileName);
+        Monitor monitor = new Monitor();
+        ZMachinery zMachinery = new ZMachinery(zFile, in, out, fileName, monitor);
 
         // get anything from zMachine in buffer
         pollStream(out, 10, 10);
@@ -101,7 +103,7 @@ public class GameService {
 
         if (zMachineCommands.indexOf("save\n") >= 0) {
             // ensure save file is written before killing zmachine
-            pollFile(new File(fileName), 10, 10);
+            monitor.doWait();
         }
 
         // kill zmachine
@@ -139,7 +141,6 @@ public class GameService {
     }
 
     public void cleanup(Account account) throws IOException {
-        String fileName = getSaveFile(account);
         Path p = FileSystems.getDefault().getPath("", getSaveFile(account));
         Files.deleteIfExists(p);
     }
@@ -151,18 +152,6 @@ public class GameService {
                 Thread.sleep(waitMillis);
             } catch (InterruptedException e) {
                 log.error("Interrupted during polling stream: {}", e.getMessage(), e);
-            }
-        }
-    }
-
-    private void pollFile(File f, int waitMillis, int numWait) {
-        // hack: ensure save file is written, avoid infinite
-        int i = 0;
-        while (i++ < numWait && (!f.exists() || f.length() == 0)) {
-            try {
-                Thread.sleep(waitMillis);
-            } catch (InterruptedException e) {
-                log.error("Interrupted during polling file: {}", e.getMessage(), e);
             }
         }
     }

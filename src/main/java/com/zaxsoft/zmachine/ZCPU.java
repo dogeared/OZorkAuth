@@ -1625,6 +1625,10 @@ public class ZCPU extends Object implements Runnable {
 			return;
 		}
 
+        if (zui.getMonitor() != null) {
+            zui.getMonitor().doNotify();
+        }
+
 		// We did it!
 		if (version <= 3)
 			doBranch();

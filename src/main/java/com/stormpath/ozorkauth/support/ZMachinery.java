@@ -1,5 +1,6 @@
 package com.stormpath.ozorkauth.support;
 
+import com.zaxsoft.zmachine.Monitor;
 import com.zaxsoft.zmachine.ZCPU;
 import com.zaxsoft.zmachine.ZUserInterface;
 
@@ -17,11 +18,13 @@ public class ZMachinery implements ZUserInterface {
     InputStream in;
     OutputStream out;
     String saveFile;
+    Monitor monitor;
 
-    public ZMachinery(String zFile, InputStream in, OutputStream out, String saveFile) {
+    public ZMachinery(String zFile, InputStream in, OutputStream out, String saveFile, Monitor monitor) {
         this.in = in;
         this.out = out;
         this.saveFile = saveFile;
+        this.monitor = monitor;
 
         cpu = new ZCPU(this);
         cpu.initialize(zFile);
@@ -225,5 +228,10 @@ public class ZMachinery implements ZUserInterface {
     @Override
     public void restart() {
 
+    }
+
+    @Override
+    public Monitor getMonitor() {
+        return monitor;
     }
 }
