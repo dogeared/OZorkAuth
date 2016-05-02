@@ -26,7 +26,7 @@ import java.io.IOException;
 @RestController
 public class GameController {
 
-    @Value("#{ @environment['zmachine.file'] ?: '/tmp/zork1.z3' }")
+    @Value("#{ @environment['zmachine.file'] ?: '/app/zork1.z3' }")
     String zFile;
 
     @Value("#{ @environment['zmachine.save.file.path'] ?: '/tmp' }")
@@ -65,10 +65,10 @@ public class GameController {
             "    3. Use the access token to send commands to the game",
             "",
             "To Register, you send a POST request to the registration endpoint (the below example uses httpie):",
-            "    http POST " + baseUrl + "/v1/r givenName=Bob surName=Smith email=bob@smith.com password=123456aA",
+            "    http POST " + baseUrl + "/v1/r givenName=<first name> surName=<last name> email=<email address> password=<password>",
             "",
             "To get an access token, you send a POST request to the oauth endpoint (the below example uses httpie):",
-            "    http -f POST " + baseUrl + "/v1/a Origin:" + baseUrl + " grant_type=password username=bob@smith.com password=123456aA",
+            "    http -f POST " + baseUrl + "/v1/a Origin:" + baseUrl + " grant_type=password username=<email address> password=<password>",
             "Note: The above command returns an access token and a refresh token. When the access token expires, you can use the refresh token to get a new access token.",
             "",
             "To use the access token to interact with the game, you send a POST request to the command endpoint (the below example uses httpie):",
@@ -161,15 +161,16 @@ public class GameController {
     @ExceptionHandler(IOException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public CommandResponse internalError(IOException ex) {
-        CommandResponse res = new CommandResponse();
-        res.setStatus("ERROR");
-        res.setMessage(ex.getMessage());
-        return res;
+        return handleException(ex);
     }
 
     @ExceptionHandler(RegistrationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public CommandResponse badRegistration(RegistrationException ex) {
+        return handleException(ex);
+    }
+
+    private CommandResponse handleException(Exception ex) {
         CommandResponse res = new CommandResponse();
         res.setStatus("ERROR");
         res.setMessage(ex.getMessage());

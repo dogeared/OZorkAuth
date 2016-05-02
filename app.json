@@ -1,0 +1,21 @@
+{
+  "name": "OZorkAuth",
+  "description": "Play the classic text-based game - Zork I - using standard OAuth2 authorization flows.",
+  "repository": "https://github.com/dogeared/OZorkAuth/tree/master",
+  "keywords": ["spring boot", "identity", "security", "authentication"],
+  "success_url": "/",
+  "env": {
+    "STORMPATH_API_KEY_ID": {
+      "description": "The API key ID from your ~/.stormpath/apiKey.properties file",
+      "value": "changeme"
+    },
+    "STORMPATH_API_KEY_SECRET": {
+      "description": "The API key secret from your ~/.stormpath/apiKey.properties file",
+      "value": "changeme"
+    },
+    "STORMPATH_APPLICATION_HREF": {
+      "description": "The URL for your Stormpath Application from the Stormpath Admin Dashboard",
+      "value": "changeme"
+    }
+  }
+}
