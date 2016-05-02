@@ -6,7 +6,8 @@ Following the instructions below, you'll be able to play the classic text-based 
 [Zork I](https://en.wikipedia.org/wiki/Zork) by interacting with an API via OAuth2.
 
 This is a Spring Boot app powered by the [Stormpath](http://stormpath.com) intgeration which provides out-of-the-box
-authentication and authorization through its SaaS platform, including OAuth2.
+authentication and authorization through its SaaS platform, including OAuth2. It also uses the
+[Zax](https://github.com/mattkimmel/zax) Java based [Z-Machine](https://en.wikipedia.org/wiki/Z-machine) by Matt Kimmel.
 
 *Full Disclosure*: I work for Stormpath.
 
