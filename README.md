@@ -56,8 +56,12 @@ Stormpath API.
 Here's an example of the registration command for the sample app running on Heroku:
 
 ```
-http POST https://ozorkauth.herokuapp.com/v1/r givenName=Bob surName=Smith email=bob@smith.com password=Password 
+http POST \
+  https://ozorkauth.herokuapp.com/v1/r \
+  givenName=Bob surName=Smith email=bob@smith.com password=Password 
 ```
+
+*Note*: Of course the above data, including the password is a made-up example. You should create your account using your own real information, including a strong password.
 
 You get a response that looks like this:
 
