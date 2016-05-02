@@ -76,7 +76,8 @@ public class GameController {
             "    http POST " + baseUrl + "/v1/c Authorization:'Bearer <access token>' request='go north'",
             "Note: if you don't send the request parameter, the response will contain the result of looking around your current location in the game",
             "",
-            "Part of the game is discovering which language elements work to move you forward in the game. If you are impatient, here's a list of all the available commands: http://zork.wikia.com/wiki/Command_List"
+            "Part of the game is discovering which language elements work to move you forward in the game.",
+            "If you are impatient, here's a list of all the available commands: http://zork.wikia.com/wiki/Command_List"
         };
 
         res.setResponse(response);
