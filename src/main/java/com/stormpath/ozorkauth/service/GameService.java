@@ -97,8 +97,20 @@ public class GameService {
         Monitor monitor = new Monitor();
         ZMachinery zMachinery = new ZMachinery(zFile, in, out, fileName, monitor);
 
+        // ensure that we are done writing based on the number of input commands
+        // plus one more to account for the introductory game header that's always output
+        int numOutput = zMachineCommands.toString().split("\n").length + 1;
+        for (int i=0; i<numOutput; i++) {
+            synchronized (in) {
+                try {
+                    in.wait();
+                } catch (InterruptedException e) {
+                    log.error("Interrupted: {}", e.getMessage(), e);
+                }
+            }
+        }
+
         // get anything from zMachine in buffer
-        pollStream(out, 10, 10);
         String res = out.toString();
 
         if (zMachineCommands.indexOf("save\n") >= 0) {
@@ -143,16 +155,5 @@ public class GameService {
     public void cleanup(Account account) throws IOException {
         Path p = FileSystems.getDefault().getPath("", getSaveFile(account));
         Files.deleteIfExists(p);
-    }
-
-    private void pollStream(ByteArrayOutputStream stream, int waitMillis, int numWait) {
-        int i = 0;
-        while (stream.size() <= 0 && i++ < numWait) {
-            try {
-                Thread.sleep(waitMillis);
-            } catch (InterruptedException e) {
-                log.error("Interrupted during polling stream: {}", e.getMessage(), e);
-            }
-        }
     }
 }

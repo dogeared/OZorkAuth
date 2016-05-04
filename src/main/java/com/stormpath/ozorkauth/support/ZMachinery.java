@@ -193,6 +193,9 @@ public class ZMachinery implements ZUserInterface {
     public void showString(String s) {
         try {
             out.write(s.getBytes());
+            synchronized (in) {
+                in.notify();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
