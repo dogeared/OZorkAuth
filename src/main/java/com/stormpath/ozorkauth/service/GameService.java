@@ -102,7 +102,7 @@ public class GameService {
         for (int i=0; i<numOutput; i++) {
             synchronized (in) {
                 try {
-                    in.wait(1000);
+                    in.wait(500);
                 } catch (InterruptedException e) {
                     log.error("Interrupted: {}", e.getMessage(), e);
                 }
