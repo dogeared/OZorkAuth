@@ -98,7 +98,7 @@ public class GameService {
         ZMachinery zMachinery = new ZMachinery(zFile, in, out, fileName, monitor);
 
         // ensure that we are done writing based on the number of input commands
-        int numOutput = zMachineCommands.toString().split("\n").length;
+        int numOutput = zMachineCommands.toString().split("\n").length + 1;
         for (int i=0; i<numOutput; i++) {
             synchronized (in) {
                 try {
