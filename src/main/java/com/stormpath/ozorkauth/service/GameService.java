@@ -98,12 +98,11 @@ public class GameService {
         ZMachinery zMachinery = new ZMachinery(zFile, in, out, fileName, monitor);
 
         // ensure that we are done writing based on the number of input commands
-        // plus one more to account for the introductory game header that's always output
-        int numOutput = zMachineCommands.toString().split("\n").length + 1;
+        int numOutput = zMachineCommands.toString().split("\n").length;
         for (int i=0; i<numOutput; i++) {
             synchronized (in) {
                 try {
-                    in.wait();
+                    in.wait(1000);
                 } catch (InterruptedException e) {
                     log.error("Interrupted: {}", e.getMessage(), e);
                 }

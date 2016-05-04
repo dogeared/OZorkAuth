@@ -3,6 +3,8 @@ package com.stormpath.ozorkauth.support;
 import com.zaxsoft.zmachine.Monitor;
 import com.zaxsoft.zmachine.ZCPU;
 import com.zaxsoft.zmachine.ZUserInterface;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -12,6 +14,8 @@ import java.io.OutputStream;
 import java.util.Vector;
 
 public class ZMachinery implements ZUserInterface {
+
+    private static final Logger log = LoggerFactory.getLogger(ZMachinery.class);
 
     ZCPU cpu;
     Thread cpuThread;
@@ -167,11 +171,11 @@ public class ZMachinery implements ZUserInterface {
         // this is a hack
         // When the ByteArrayInputStream is exhausted, we just want to tie things up here until the thread is killed.
         if (rc == -1) {
-            while (true) {
+            synchronized (saveFile) {
                 try {
-                    Thread.sleep(50);
+                    saveFile.wait();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.error("Interrupted: {}", e.getMessage(), e);
                 }
             }
         }
